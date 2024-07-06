@@ -12,6 +12,7 @@ import { SQLiteProvider } from "expo-sqlite";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { createTables } from "@/utils/database/initializeDatabase";
 import DataProvider from "@/providers/DataProvider";
+import { NotificationProvider } from "@/providers/NotificationProvider";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -41,10 +42,12 @@ export default function RootLayout() {
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ title: "My Home" }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
+          <NotificationProvider>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ title: "My Home" }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </NotificationProvider>
         </ThemeProvider>
       </DataProvider>
     </SQLiteProvider>

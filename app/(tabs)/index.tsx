@@ -1,10 +1,14 @@
-import { SafeAreaView, View, Text, FlatList } from "react-native";
+import { View, FlatList, Button } from "react-native";
+import notifee from "@notifee/react-native";
+
 import SectionDisplay from "@/components/display/SectionDisplay";
 import Typography from "@/components/Typography";
 import { useStyle } from "@/hooks/useStyle";
 import { RootView } from "@/components/display/RootView";
 import BillCard from "@/components/display/BillCard";
 import { useData } from "@/hooks/useData";
+import { useNotification } from "@/hooks/useNotification";
+import { useEffect } from "react";
 
 const NoOutstandingBillsMessage = () => {
   const { styles } = useStyle();
@@ -21,6 +25,20 @@ const NoOutstandingBillsMessage = () => {
 const HomeScreen = () => {
   const { dimensions } = useStyle();
   const { outstandingBills } = useData();
+  const { notificatePendingBills, removePendingBillsNotification } =
+    useNotification();
+
+  const scheduleNotification = async () => {
+    if (outstandingBills.length) {
+      await notificatePendingBills();
+    } else {
+      removePendingBillsNotification();
+    }
+  };
+
+  useEffect(() => {
+    scheduleNotification();
+  }, [outstandingBills]);
 
   return (
     <RootView>
