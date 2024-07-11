@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { View, TouchableHighlight } from "react-native";
-// import { useSnackbar } from "@/hooks/useSnackbar";
+import { useSnackbar } from "@/hooks/useSnackbar";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Typography from "@/components/Typography";
 import { Bill } from "@/entities/Bill";
 import { useStyle } from "@/hooks/useStyle";
 import { maskCurrency } from "@/utils/parser";
 import Switch from "@/components/Switch";
-// import * as BillService from "@/services/bill";
-// import DeleteModal from "@/components/modals/DeleteModal";
-// import { useData } from "@/hooks/useData";
+import BillService from "@/services/bill";
+import DeleteModal from "@/components/modals/DeleteModal";
+import { useData } from "@/hooks/useData";
 import { isCurrentMonth } from "@/utils/date-parser";
+import { useSQLiteContext } from "expo-sqlite";
 
 type Props = {
   data: Bill;
@@ -19,8 +20,11 @@ type Props = {
 
 const BillCard = ({ data, mode }: Props) => {
   const { styles, colors } = useStyle();
-  //   const { showSnackbar } = useSnackbar();
-  //   const { reloadAllBills, reloadCurrentMonthBills } = useData();
+  const { showSnackbar } = useSnackbar();
+  const { reloadAllBills, reloadCurrentMonthBills } = useData();
+  const db = useSQLiteContext();
+
+  const billService = new BillService(db);
 
   const [isPaid, setIsPaid] = useState(data.isPaid);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -29,35 +33,35 @@ const BillCard = ({ data, mode }: Props) => {
 
   const handlePaymentStatusChange = async (status: boolean) => {
     try {
-      //   await BillService.updatePaymentStatus(data.id, status);
+      await billService.updatePaymentStatus(data.id, status);
       setIsPaid(status);
 
-      //   if (isCurrentMonth(data.dueDate)) {
-      //     reloadCurrentMonthBills();
-      //   } else {
-      //     reloadAllBills();
-      //   }
+      if (isCurrentMonth(data.dueDate)) {
+        reloadCurrentMonthBills();
+      } else {
+        reloadAllBills();
+      }
     } catch (error) {
-      //   showSnackbar({
-      //     variant: "error",
-      //     message: "Failed to update the payment status",
-      //   });
+      showSnackbar({
+        variant: "error",
+        message: "Failed to update the payment status",
+      });
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
-      //   await BillService.deleteBill(id);
-      //   if (isCurrentMonth(data.dueDate)) {
-      //     reloadCurrentMonthBills();
-      //   } else {
-      //     reloadAllBills();
-      //   }
+      await billService.deleteBill(id);
+      if (isCurrentMonth(data.dueDate)) {
+        reloadCurrentMonthBills();
+      } else {
+        reloadAllBills();
+      }
     } catch (error) {
-      //   showSnackbar({
-      //     variant: "error",
-      //     message: "Failed to delete the bill",
-      //   });
+      showSnackbar({
+        variant: "error",
+        message: "Failed to delete the bill",
+      });
     }
   };
 
@@ -106,14 +110,13 @@ const BillCard = ({ data, mode }: Props) => {
           />
         </View>
       )}
-
-      {/* <DeleteModal
+      <DeleteModal
         id={data.id}
         message="Are you sure you want to delete this bill?"
         showConfirmModal={showConfirmModal}
         handleDelete={handleDelete}
         setShowConfirmModal={setShowConfirmModal}
-      /> */}
+      />
     </View>
   );
 };

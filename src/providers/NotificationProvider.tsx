@@ -53,11 +53,12 @@ export const NotificationProvider = ({ children }: PropsWithChildren) => {
             body: "Some bills are awaiting payment. Click to check.",
             android: {
               channelId: notificationChannel.billsPending,
+              smallIcon: "ic_my_home_notif",
             },
           },
           {
             type: TriggerType.TIMESTAMP,
-            timestamp: sumDate(new Date(), 1, "day"),
+            timestamp: sumDate(scheduleDate, 1, "day"),
             repeatFrequency: RepeatFrequency.DAILY,
           }
         );
