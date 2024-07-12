@@ -46,7 +46,7 @@ export const getFilteredByStatement = async <T extends object>(
   };
 };
 
-export const getCurrentMonthStatement = async (
+export const getCurrentMonthStatement = async <T>(
   db: SQLite.SQLiteDatabase,
   tablename: string,
   { column, month }: CurrentMonthParams
@@ -57,7 +57,9 @@ export const getCurrentMonthStatement = async (
 
   return {
     execute: async () =>
-      (await statement.executeAsync({ $month: month })).getAllAsync(),
+      (
+        await statement.executeAsync({ $month: month })
+      ).getAllAsync() as Promise<T[]>,
     statement,
   };
 };

@@ -5,7 +5,12 @@ import {
   getFilteredByStatement,
   getStatement,
 } from "@/utils/database/find";
-import { BillInsertDTo, insertBillStatement } from "@/utils/database/insert";
+import {
+  BillInsertDTo,
+  insertBillsReplicationStatement,
+  insertBillStatement,
+  insertManyBillsStatement,
+} from "@/utils/database/insert";
 import { updateColumnStatement } from "@/utils/database/update";
 import { BillDTO } from "@/utils/entity/bill";
 import { maskCurrencyToInt, toCurrencyInteger } from "@/utils/parser";
@@ -116,6 +121,48 @@ class BillService {
     } finally {
       await statement.finalizeAsync();
     }
+  }
+
+  async replicateMonthlyBills() {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    await this.db.withTransactionAsync(async () => {
+      const { execute, statement } = await getCurrentMonthStatement(
+        this.db,
+        "bill_monthly_replication",
+        { column: "replicationDate", month: currentMonth }
+      );
+      const { execute: executeGetBills, statement: getBillStatement } =
+        await getCurrentMonthStatement<Bill>(this.db, "bill", {
+          column: "dueDate",
+          month: currentMonth - 1,
+        });
+      const { execute: executeInsertBills, statement: inserBillsStatement } =
+        await insertManyBillsStatement(this.db);
+      const {
+        execute: executeInsertBillsReplication,
+        statement: billsReplicationStatement,
+      } = await insertBillsReplicationStatement(this.db);
+
+      try {
+        const replicationRecords = await execute();
+        const alreadyReplicated = replicationRecords.length > 0;
+
+        if (!alreadyReplicated) {
+          const bills = await executeGetBills();
+          const monthlyBills = bills.filter((i) => i.isMonthly);
+
+          await executeInsertBills(monthlyBills.map(({ id, ...dto }) => dto));
+          await executeInsertBillsReplication({ replicationDate: new Date() });
+        }
+      } finally {
+        await statement.finalizeAsync();
+        await getBillStatement.finalizeAsync();
+        await inserBillsStatement.finalizeAsync();
+        await billsReplicationStatement.finalizeAsync();
+      }
+    });
   }
 }
 

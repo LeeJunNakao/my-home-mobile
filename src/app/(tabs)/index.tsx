@@ -9,6 +9,8 @@ import BillCard from "@/components/display/BillCard";
 import { useData } from "@/hooks/useData";
 import { useNotification } from "@/hooks/useNotification";
 import { useEffect } from "react";
+import { useSQLiteContext } from "expo-sqlite";
+import BillService from "@/services/bill";
 
 const NoOutstandingBillsMessage = () => {
   const { styles } = useStyle();
@@ -27,6 +29,9 @@ const HomeScreen = () => {
   const { outstandingBills } = useData();
   const { notificatePendingBills, removePendingBillsNotification } =
     useNotification();
+  const db = useSQLiteContext();
+
+  const billService = new BillService(db);
 
   const scheduleNotification = async () => {
     if (outstandingBills.length) {
@@ -35,6 +40,10 @@ const HomeScreen = () => {
       removePendingBillsNotification();
     }
   };
+
+  useEffect(() => {
+    billService.replicateMonthlyBills();
+  }, []);
 
   useEffect(() => {
     scheduleNotification();

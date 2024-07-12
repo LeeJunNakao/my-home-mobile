@@ -1,4 +1,4 @@
-import { SQLiteDatabase, useSQLiteContext } from "expo-sqlite";
+import { SQLiteDatabase } from "expo-sqlite";
 
 export const deleteByIdStatement = async (db: SQLiteDatabase, id: number) => {
   const statement = await db.prepareAsync(`DELETE FROM bill WHERE id = $id`);

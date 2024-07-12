@@ -7,6 +7,6 @@ export const createTables = async (db: SQLiteDatabase) => {
     `);
   await db.execAsync(`
       PRAGMA journal_mode = WAL;
-      CREATE TABLE IF NOT EXISTS bill_monthly_replication (id INTEGER PRIMARY KEY NOT NULL, dueDate DATE NOT NULL);
+      CREATE TABLE IF NOT EXISTS bill_monthly_replication (id INTEGER PRIMARY KEY NOT NULL, replicationDate DATE NOT NULL);
     `);
 };
