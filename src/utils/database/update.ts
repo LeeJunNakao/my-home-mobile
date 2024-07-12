@@ -1,13 +1,18 @@
 import { SQLiteDatabase } from "expo-sqlite";
 
+type UpdateParams = {
+  column: string;
+  id: number;
+  value: any;
+};
+
 export const updateColumnStatement = async (
   db: SQLiteDatabase,
-  column: string,
-  id: number,
-  value: any
+  table: string,
+  { id, column, value }: UpdateParams
 ) => {
   const statement = await db.prepareAsync(
-    `UPDATE bill SET ${column} = $value WHERE id = $id`
+    `UPDATE ${table} SET ${column} = $value WHERE id = $id`
   );
 
   const execute = async () =>

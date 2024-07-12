@@ -5,4 +5,8 @@ export const createTables = async (db: SQLiteDatabase) => {
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS bill (id INTEGER PRIMARY KEY NOT NULL, name VARCHAR(50) NOT NULL, paymentValue INTEGER, dueDate DATE NOT NULL, isMonthly BOOLEAN, isPaid BOOLEAN DEFAULT false);
     `);
+  await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS bill_monthly_replication (id INTEGER PRIMARY KEY NOT NULL, dueDate DATE NOT NULL);
+    `);
 };

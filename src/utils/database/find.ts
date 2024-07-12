@@ -1,9 +1,22 @@
 import { Bill } from "@/entities/Bill";
 import * as SQLite from "expo-sqlite";
 
-export const getBillsStatement = async (db: SQLite.SQLiteDatabase) => {
+type FilteredByParams<T extends object, K extends keyof T> = {
+  where: Partial<T>;
+  orderBy?: { field: K; order: "ASC" | "DESC" };
+};
+
+type CurrentMonthParams = {
+  column: string;
+  month: number;
+};
+
+export const getStatement = async (
+  db: SQLite.SQLiteDatabase,
+  tablename: string
+) => {
   const statement = await db.prepareAsync(
-    "SELECT * FROM bill ORDER BY dueDate DESC"
+    `SELECT * FROM ${tablename} ORDER BY dueDate DESC`
   );
 
   return {
@@ -12,21 +25,17 @@ export const getBillsStatement = async (db: SQLite.SQLiteDatabase) => {
   };
 };
 
-type FilteredBillsArgs<K extends keyof Bill> = {
-  where: Record<K, Bill[K]>;
-  orderBy?: { field: keyof Bill; order: "ASC" | "DESC" };
-};
-
-export const getFilteredBillsStatement = async <K extends keyof Bill>(
+export const getFilteredByStatement = async <T extends object>(
   db: SQLite.SQLiteDatabase,
-  { where, orderBy }: FilteredBillsArgs<K>
+  tablename: string,
+  { where, orderBy }: FilteredByParams<T, keyof T>
 ) => {
   const columnName = Object.keys(where)[0];
-  const value = where[columnName as K] as any;
+  const value = where[columnName as keyof T] as any;
 
   const statement = await db.prepareAsync(
-    `SELECT * FROM bill WHERE ${columnName} = $value ORDER BY ${
-      orderBy?.field || "dueDate"
+    `SELECT * FROM ${tablename} WHERE ${columnName} = $value ORDER BY ${
+      orderBy?.field as string
     } ${orderBy?.order || "DESC"}`
   );
 
@@ -37,12 +46,13 @@ export const getFilteredBillsStatement = async <K extends keyof Bill>(
   };
 };
 
-export const getCurrentMonthBillsStatement = async (
+export const getCurrentMonthStatement = async (
   db: SQLite.SQLiteDatabase,
-  month: number
+  tablename: string,
+  { column, month }: CurrentMonthParams
 ) => {
   const statement = await db.prepareAsync(
-    "SELECT * FROM bill WHERE CAST(strftime('%m', dueDate) as INT) = $month ORDER BY dueDate ASC"
+    `SELECT * FROM ${tablename} WHERE CAST(strftime('%m', ${column}) as INT) = $month ORDER BY ${column} ASC`
   );
 
   return {

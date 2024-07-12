@@ -49,7 +49,7 @@ export const NotificationProvider = ({ children }: PropsWithChildren) => {
         const notificationId = await notifee.createTriggerNotification(
           {
             id: "schedule-bills-pending",
-            title: "Bills with Pending Payments",
+            title: "Bills with pending payments",
             body: "Some bills are awaiting payment. Click to check.",
             android: {
               channelId: notificationChannel.billsPending,

@@ -1,9 +1,9 @@
 import { Bill } from "@/entities/Bill";
 import { deleteByIdStatement } from "@/utils/database/delete";
 import {
-  getCurrentMonthBillsStatement,
-  getBillsStatement,
-  getFilteredBillsStatement,
+  getCurrentMonthStatement,
+  getFilteredByStatement,
+  getStatement,
 } from "@/utils/database/find";
 import { BillInsertDTo, insertBillStatement } from "@/utils/database/insert";
 import { updateColumnStatement } from "@/utils/database/update";
@@ -42,9 +42,10 @@ class BillService {
   async getCurrentMonthBills(): Promise<Bill[]> {
     const currentMonth = new Date();
 
-    const { execute, statement } = await getCurrentMonthBillsStatement(
+    const { execute, statement } = await getCurrentMonthStatement(
       this.db,
-      currentMonth.getMonth() + 1
+      "bill",
+      { month: currentMonth.getMonth() + 1, column: "dueDate" }
     );
 
     try {
@@ -57,7 +58,7 @@ class BillService {
   }
 
   async getAllBills(): Promise<Bill[]> {
-    const { execute, statement } = await getBillsStatement(this.db);
+    const { execute, statement } = await getStatement(this.db, "bill");
 
     try {
       const bills = (await execute()) as Bill[];
@@ -69,10 +70,14 @@ class BillService {
   }
 
   async getAllOutstandingBills(): Promise<Bill[]> {
-    const { execute, statement } = await getFilteredBillsStatement(this.db, {
-      where: { isPaid: false },
-      orderBy: { field: "dueDate", order: "ASC" },
-    });
+    const { execute, statement } = await getFilteredByStatement<Bill>(
+      this.db,
+      "bill",
+      {
+        where: { isPaid: false },
+        orderBy: { field: "dueDate", order: "ASC" },
+      }
+    );
 
     try {
       const bills = (await execute()) as Bill[];
@@ -88,9 +93,12 @@ class BillService {
   async updatePaymentStatus(id: number, status: boolean) {
     const { execute, statement } = await updateColumnStatement(
       this.db,
-      "isPaid",
-      id,
-      status
+      "bill",
+      {
+        id,
+        column: "isPaid",
+        value: status,
+      }
     );
 
     try {
